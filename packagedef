@@ -13,7 +13,7 @@
         .ВключитьФайл("src")
         .ВключитьФайл("oscript_modules")
         .ВключитьФайл("README.md")
-        .ВключитьФайл("LICENSE")
+        .ВключитьФайл("LICENSE.md")
         .ИсполняемыйФайл("src/cli/main.os", "mutatos")
 
         .ЗависитОт("osparser", "0.1.0")
