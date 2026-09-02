@@ -666,9 +666,32 @@
 
 КонецФункции
 
+// Значения тёмной палитры.
+//
+// Отдельно, потому что подставляются в два места: в медиазапрос системной темы
+// и в правило переключателя. Раньше они там были выписаны дважды и разъехались -
+// правка бейджей попала только в одно.
+Функция ТемнаяПалитра()
+
+	Возврат "		--bg: #16181c; --fg: #e6e8eb; --muted: #9aa0a6; --faint: #6a707a;
+		|		--line: #2a2e35; --border: #343a42; --border-hover: #4a515b;
+		|		--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
+		|		--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
+		|		--btn-bg: #e6e8eb; --btn-fg: #16181c;
+		|		/* Бейдж в тёмной теме - цветной текст на своей подложке, а не заливка:
+		|		   чёрным по зелёному читается плохо, а белым по ним - слишком ярко */
+		|		--badge-killed-bg: #14301c; --badge-killed-fg: #4ac26b;
+		|		--badge-survived-bg: #3a1a1a; --badge-survived-fg: #f27a72;
+		|		--badge-nocover-bg: #21242a; --badge-nocover-fg: #9aa0a6;
+		|		--badge-partial-bg: #35291a; --badge-partial-fg: #e0a44a;";
+
+КонецФункции
+
 Функция Стили()
 
-	Возврат "<style>
+	// Подстановка заменой, а не СтрШаблон: в стилях есть проценты (width: 100%),
+	// и шаблон принял бы их за подстановочные знаки
+	Возврат СтрЗаменить("<style>
 	|/* Светлая палитра - основная, тёмная переопределяет только цвета.
 	|   По умолчанию тема берётся из системы, а переключатель её перебивает:
 	|   :has() позволяет обойтись без сценариев, как и переключатель вида */
@@ -678,19 +701,15 @@
 	|	--killed: #1a7f37; --survived: #c0392b; --partial: #b26a00; --link: #0b5cd5;
 	|	--bg-killed: #e7f5ea; --bg-survived: #fdeaea; --bg-nocover: #f1f2f4; --bg-error: #fdf3e3;
 	|	--btn-bg: #1c1e21; --btn-fg: #fff;
-	|	/* У бейджей свои фоны: цвета текста для них слишком светлые */
-	|	--badge-fg: #fff; --badge-killed: #1a7f37; --badge-survived: #c0392b;
-	|	--badge-nocover: #6a707a; --badge-partial: #b26a00;
+	|	/* У бейджей свои цвета: в светлой теме это заливка с белым текстом */
+	|	--badge-killed-bg: #1a7f37; --badge-killed-fg: #fff;
+	|	--badge-survived-bg: #c0392b; --badge-survived-fg: #fff;
+	|	--badge-nocover-bg: #6a707a; --badge-nocover-fg: #fff;
+	|	--badge-partial-bg: #b26a00; --badge-partial-fg: #fff;
 	|}
 	|@media (prefers-color-scheme: dark) {
 	|	:root:not(:has(#theme-light:checked)) {
-	|		--bg: #16181c; --fg: #e6e8eb; --muted: #9aa0a6; --faint: #6a707a;
-	|		--line: #2a2e35; --border: #343a42; --border-hover: #4a515b;
-	|		--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
-	|		--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
-	|		--btn-bg: #e6e8eb; --btn-fg: #16181c;
-	|		/* фоны бейджей в тёмной теме светлые, поэтому текст на них тёмный */
-	|		--badge-fg: #16181c;
+	|/* dark-palette */
 	|	}
 	|	/* Цвет кода берётся прямо здесь, а не через промежуточную переменную:
 	|	   var() внутри переменной подставляется там, где переменная объявлена,
@@ -698,30 +717,26 @@
 	|	:root:not(:has(#theme-light:checked)) table.source td.code span { color: var(--shiki-dark); }
 	|}
 	|:root:has(#theme-dark:checked) {
-	|	--bg: #16181c; --fg: #e6e8eb; --muted: #9aa0a6; --faint: #6a707a;
-	|	--line: #2a2e35; --border: #343a42; --border-hover: #4a515b;
-	|	--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
-	|	--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
-	|	--btn-bg: #e6e8eb; --btn-fg: #16181c;
-	|	/* В тёмной теме бейджи не светлеют вслед за текстом, а темнеют:
-	|	   чёрным по зелёному и красному читается плохо */
-	|	--badge-fg: #f0f2f4; --badge-killed: #24603a; --badge-survived: #8c3b34;
-	|	--badge-nocover: #3a4048; --badge-partial: #7a5518;
+	|/* dark-palette */
 	|}
 	|:root:has(#theme-dark:checked) table.source td.code span { color: var(--shiki-dark); }
+	|/* Кегль один на всю страницу: размеры заданы долями от базового, поэтому
+	|   исходник, таблицы и заголовки растут и уменьшаются вместе.
+	|   Базовый на html, а не на body: rem отсчитывается от корня */
+	|html { font-size: 14px; }
 	|body { font-family: system-ui, -apple-system, ""Segoe UI"", sans-serif; margin: 0 auto; padding: 24px;
 	|	max-width: 1100px; color: var(--fg); background: var(--bg); }
-	|h1 { font-size: 22px; margin: 0 0 20px; }
-	|h2.package { font-size: 13px; margin: 34px 0 10px; text-transform: uppercase; letter-spacing: 0.08em;
+	|h1 { font-size: 1.75rem; margin: 0 0 20px; }
+	|h2.package { font-size: 0.95rem; margin: 34px 0 10px; text-transform: uppercase; letter-spacing: 0.08em;
 	|	color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 6px;
 	|	word-break: break-all; }
-	|h3 { font-size: 15px; margin: 24px 0 8px; font-family: ui-monospace, ""Cascadia Code"", Consolas, monospace;
+	|h3 { font-size: 1.1rem; margin: 24px 0 8px; font-family: ui-monospace, ""Cascadia Code"", Consolas, monospace;
 	|	font-weight: 600; word-break: break-all; }
 	|.switch { position: absolute; opacity: 0; pointer-events: none; }
 	|.tabs { display: flex; gap: 4px; margin: 24px 0 12px; }
 	|.tabs label.theme { margin-left: auto; }
 	|.tabs label.theme ~ label.theme { margin-left: 0; }
-	|.tabs label { font-size: 13px; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
+	|.tabs label { font-size: 0.9rem; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
 	|	cursor: pointer; color: var(--muted); user-select: none; }
 	|.tabs label:hover { border-color: var(--border-hover); }
 	|#view-packages:checked ~ .tabs label[for=""view-packages""],
@@ -732,32 +747,32 @@
 	|#view-packages:checked ~ table.files { display: none; }
 	|#view-files:checked ~ table.packages { display: none; }
 	|#view-files:checked ~ .sections h2.package { display: none; }
-	|table.packages { border-collapse: collapse; width: 100%; font-size: 14px; }
+	|table.packages { border-collapse: collapse; width: 100%; font-size: 1rem; }
 	|table.packages th, table.packages td { border-bottom: 1px solid var(--line); padding: 6px 10px;
 	|	text-align: right; }
 	|table.packages th:first-child, table.packages td:first-child { text-align: left; word-break: break-all; }
-	|table.packages th { font-size: 12px; color: var(--muted); font-weight: 600; }
+	|table.packages th { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
 	|table.packages td.killed { color: var(--killed); }
 	|table.packages td.survived { color: var(--survived); }
 	|table.packages td.partial { color: var(--partial); }
 	|table.packages td.nocover, table.files td.nocover { color: var(--faint); }
 	|.summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
 	|.metric { border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; min-width: 96px; }
-	|.metric .value { font-size: 22px; font-weight: 600; }
-	|.metric .caption { font-size: 12px; color: var(--muted); margin-top: 2px; }
+	|.metric .value { font-size: 1.75rem; font-weight: 600; }
+	|.metric .caption { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
 	|.metric.killed .value { color: var(--killed); }
 	|.metric.survived .value { color: var(--survived); }
 	|.metric.partial .value { color: var(--partial); }
 	|.metric.nocover .value { color: var(--muted); }
 	|.metric.error .value { color: var(--partial); }
-	|table.files { border-collapse: collapse; width: 100%; font-size: 14px; }
+	|table.files { border-collapse: collapse; width: 100%; font-size: 1rem; }
 	|table.files th, table.files td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: right; }
 	|table.files th:first-child, table.files td:first-child { text-align: left; word-break: break-all; }
-	|table.files th { font-size: 12px; color: var(--muted); font-weight: 600; }
+	|table.files th { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
 	|table.files td.killed { color: var(--killed); }
 	|table.files td.survived { color: var(--survived); }
 	|table.files td.partial { color: var(--partial); }
-	|table.source { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.5;
+	|table.source { border-collapse: collapse; width: 100%; font-size: 1rem; line-height: 1.5;
 	|	font-family: ui-monospace, ""Cascadia Code"", Consolas, monospace; }
 	|table.source td { padding: 1px 8px; vertical-align: top; }
 	|table.source td.num { text-align: right; color: var(--faint); width: 1%; white-space: nowrap;
@@ -770,20 +785,22 @@
 	|table.source tr.survived { background: var(--bg-survived); }
 	|table.source tr.nocover { background: var(--bg-nocover); }
 	|table.source tr.error { background: var(--bg-error); }
-	|table.source tr.mutation td { font-size: 13px; padding-bottom: 4px; }
-	|.badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 600;
-	|	color: var(--badge-fg); }
-	|.badge.killed { background: var(--badge-killed); }
-	|.badge.survived { background: var(--badge-survived); }
-	|.badge.nocover { background: var(--badge-nocover); }
-	|.badge.error { background: var(--badge-partial); }
+	|table.source tr.mutation td { font-size: 0.92rem; padding-bottom: 4px; }
+	|.badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 0.85rem;
+	|	font-weight: 600; }
+	|.badge.killed { background: var(--badge-killed-bg); color: var(--badge-killed-fg); }
+	|.badge.survived { background: var(--badge-survived-bg); color: var(--badge-survived-fg); }
+	|.badge.nocover { background: var(--badge-nocover-bg); color: var(--badge-nocover-fg); }
+	|.badge.error { background: var(--badge-partial-bg); color: var(--badge-partial-fg); }
 	|.mutator { color: var(--muted); }
 	|.method { color: var(--muted); }
-	|.missing { color: var(--muted); font-size: 14px; }
-	|.footer { color: var(--faint); font-size: 12px; margin-top: 32px; }
+	|.missing { color: var(--muted); font-size: 1rem; }
+	|.footer { color: var(--faint); font-size: 0.85rem; margin-top: 32px; }
 	|a { color: var(--link); text-decoration: none; }
 	|a:hover { text-decoration: underline; }
-	|</style>";
+	|</style>",
+	"/* dark-palette */",
+	ТемнаяПалитра());
 
 КонецФункции
 
