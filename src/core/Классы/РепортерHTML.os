@@ -655,8 +655,7 @@
 	|	--line: #e6e8eb; --border: #dcdfe3; --border-hover: #b9bfc7;
 	|	--killed: #1a7f37; --survived: #c0392b; --partial: #b26a00; --link: #0b5cd5;
 	|	--bg-killed: #e7f5ea; --bg-survived: #fdeaea; --bg-nocover: #f1f2f4; --bg-error: #fdf3e3;
-	|	--btn-bg: #1c1e21; --btn-fg: #fff;
-	|	--code: var(--shiki-light);
+	|	--btn-bg: #1c1e21; --btn-fg: #fff; --badge-fg: #fff;
 	|}
 	|@media (prefers-color-scheme: dark) {
 	|	:root:not(:has(#theme-light:checked)) {
@@ -665,8 +664,13 @@
 	|		--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
 	|		--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
 	|		--btn-bg: #e6e8eb; --btn-fg: #16181c;
-	|		--code: var(--shiki-dark);
+	|		/* фоны бейджей в тёмной теме светлые, поэтому текст на них тёмный */
+	|		--badge-fg: #16181c;
 	|	}
+	|	/* Цвет кода берётся прямо здесь, а не через промежуточную переменную:
+	|	   var() внутри переменной подставляется там, где переменная объявлена,
+	|	   а --shiki-light и --shiki-dark живут на самих токенах */
+	|	:root:not(:has(#theme-light:checked)) table.source td.code span { color: var(--shiki-dark); }
 	|}
 	|:root:has(#theme-dark:checked) {
 	|	--bg: #16181c; --fg: #e6e8eb; --muted: #9aa0a6; --faint: #6a707a;
@@ -674,8 +678,10 @@
 	|	--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
 	|	--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
 	|	--btn-bg: #e6e8eb; --btn-fg: #16181c;
-	|	--code: var(--shiki-dark);
+	|	/* фоны бейджей в тёмной теме светлые, поэтому текст на них тёмный */
+	|	--badge-fg: #16181c;
 	|}
+	|:root:has(#theme-dark:checked) table.source td.code span { color: var(--shiki-dark); }
 	|body { font-family: system-ui, -apple-system, ""Segoe UI"", sans-serif; margin: 0 auto; padding: 24px;
 	|	max-width: 1100px; color: var(--fg); background: var(--bg); }
 	|h1 { font-size: 22px; margin: 0 0 20px; }
@@ -730,15 +736,16 @@
 	|table.source td.num { text-align: right; color: var(--faint); width: 1%; white-space: nowrap;
 	|	user-select: none; border-right: 1px solid var(--line); }
 	|table.source td.code { white-space: pre-wrap; }
-	|/* Shiki кладёт в каждый токен обе темы переменными, а какую взять - решает тут */
-	|table.source td.code span { color: var(--code); }
+	|/* Shiki кладёт в каждый токен обе темы переменными, а какую взять - решают
+	|   правила выше: тут светлая, там тёмная */
+	|table.source td.code span { color: var(--shiki-light); }
 	|table.source tr.killed { background: var(--bg-killed); }
 	|table.source tr.survived { background: var(--bg-survived); }
 	|table.source tr.nocover { background: var(--bg-nocover); }
 	|table.source tr.error { background: var(--bg-error); }
 	|table.source tr.mutation td { font-size: 12px; padding-bottom: 3px; }
 	|.badge { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 600;
-	|	color: #fff; }
+	|	color: var(--badge-fg); }
 	|.badge.killed { background: var(--killed); }
 	|.badge.survived { background: var(--survived); }
 	|.badge.nocover { background: var(--muted); }
