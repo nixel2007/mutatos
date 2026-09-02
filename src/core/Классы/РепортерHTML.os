@@ -48,13 +48,21 @@
 
 	Пакеты = ПакетыПоФайлам(Файлы);
 
-	// Переключатель на радиокнопках, без сценариев: отчёт должен открываться
-	// откуда угодно - из письма, из артефактов сборки, с диска
-	Строки.Добавить("<input type=""radio"" name=""вид"" id=""вид-пакеты"" class=""switch"" checked>");
-	Строки.Добавить("<input type=""radio"" name=""вид"" id=""вид-файлы"" class=""switch"">");
+	// Переключатели на радиокнопках, без сценариев: отчёт должен открываться
+	// откуда угодно - из письма, из артефактов сборки, с диска.
+	//
+	// Тема по умолчанию - системная, поэтому обе радиокнопки темы не отмечены:
+	// отмеченная перебивает систему, а вернуться к ней можно только перезагрузкой.
+	// Без сценариев третьего состояния у радиокнопок нет
+	Строки.Добавить("<input type=""radio"" name=""view"" id=""view-packages"" class=""switch"" checked>");
+	Строки.Добавить("<input type=""radio"" name=""view"" id=""view-files"" class=""switch"">");
+	Строки.Добавить("<input type=""radio"" name=""theme"" id=""theme-light"" class=""switch"">");
+	Строки.Добавить("<input type=""radio"" name=""theme"" id=""theme-dark"" class=""switch"">");
 	Строки.Добавить("<div class=""tabs"">"
-		+ "<label for=""вид-пакеты"">По пакетам</label>"
-		+ "<label for=""вид-файлы"">По файлам</label>"
+		+ "<label for=""view-packages"">По пакетам</label>"
+		+ "<label for=""view-files"">По файлам</label>"
+		+ "<label for=""theme-light"" class=""theme"">Светлая</label>"
+		+ "<label for=""theme-dark"" class=""theme"">Тёмная</label>"
 		+ "</div>");
 
 	Строки.Добавить(ТаблицаПакетов(Пакеты));
@@ -99,53 +107,63 @@
 // экземпляром: отчёт большого проекта и так весит немало.
 //
 // Грамматика bsl - это 1С:Предприятие, у OneScript синтаксис тот же.
+//
+// Тем две. Shiki кладёт в каждый токен обе переменными --shiki-light и --shiki-dark,
+// а какую взять, решает CSS - так подсветка следует за переключателем темы
+// и не требует перекрашивать разметку заново.
 Функция Подсветка()
 
 	Возврат "<script type=""module"">
 	|const CDN = ""https://esm.sh"";
 	|
-	|const экранировать = (текст) => текст
+	|const escape = (text) => text
 	|	.replace(/&/g, ""&amp;"").replace(/</g, ""&lt;"").replace(/>/g, ""&gt;"");
+	|
+	|const style = (token) => Object.entries(token.htmlStyle ?? {})
+	|	.map(([name, value]) => `${name}:${value}`)
+	|	.join("";"");
 	|
 	|try {
 	|
-	|	const [{ createHighlighterCore }, { createOnigurumaEngine }, грамматика, тема] =
+	|	const [{ createHighlighterCore }, { createOnigurumaEngine }, grammar, light, dark] =
 	|		await Promise.all([
 	|			import(CDN + ""/shiki@3/core""),
 	|			import(CDN + ""/shiki@3/engine/oniguruma""),
 	|			import(CDN + ""/@shikijs/langs@3/bsl""),
-	|			import(CDN + ""/@shikijs/themes@3/github-light"")
+	|			import(CDN + ""/@shikijs/themes@3/github-light""),
+	|			import(CDN + ""/@shikijs/themes@3/github-dark"")
 	|		]);
 	|
-	|	const подсветка = await createHighlighterCore({
-	|		langs: [грамматика.default],
-	|		themes: [тема.default],
+	|	const highlighter = await createHighlighterCore({
+	|		langs: [grammar.default],
+	|		themes: [light.default, dark.default],
 	|		engine: createOnigurumaEngine(import(CDN + ""/shiki@3/wasm""))
 	|	});
 	|
-	|	for (const таблица of document.querySelectorAll(""table.source[data-lang]"")) {
+	|	for (const table of document.querySelectorAll(""table.source[data-lang]"")) {
 	|
-	|		const ячейки = [...таблица.querySelectorAll(""td.code"")];
-	|		const исходник = ячейки.map((я) => я.textContent).join(""\n"");
+	|		const cells = [...table.querySelectorAll(""td.code"")];
+	|		const source = cells.map((cell) => cell.textContent).join(""\n"");
 	|
-	|		const { tokens } = подсветка.codeToTokens(исходник, {
+	|		const { tokens } = highlighter.codeToTokens(source, {
 	|			lang: ""bsl"",
-	|			theme: ""github-light""
+	|			themes: { light: ""github-light"", dark: ""github-dark"" },
+	|			defaultColor: false
 	|		});
 	|
-	|		ячейки.forEach((ячейка, номер) => {
-	|			const строка = tokens[номер];
-	|			if (!строка) return;
-	|			ячейка.innerHTML = строка
-	|				.map((т) => `<span style=""color:${т.color}"">${экранировать(т.content)}</span>`)
+	|		cells.forEach((cell, index) => {
+	|			const line = tokens[index];
+	|			if (!line) return;
+	|			cell.innerHTML = line
+	|				.map((token) => `<span style=""${style(token)}"">${escape(token.content)}</span>`)
 	|				.join("""");
 	|		});
 	|
 	|	}
 	|
-	|} catch (ошибка) {
+	|} catch (error) {
 	|	// подсветка - украшение: без сети отчёт остаётся читаемым как есть
-	|	console.warn(""Подсветка не загрузилась:"", ошибка);
+	|	console.warn(""Подсветка не загрузилась:"", error);
 	|}
 	|</script>";
 
@@ -629,69 +647,107 @@
 Функция Стили()
 
 	Возврат "<style>
+	|/* Светлая палитра - основная, тёмная переопределяет только цвета.
+	|   По умолчанию тема берётся из системы, а переключатель её перебивает:
+	|   :has() позволяет обойтись без сценариев, как и переключатель вида */
+	|:root {
+	|	--bg: #fff; --fg: #1c1e21; --muted: #6a707a; --faint: #9aa0a6;
+	|	--line: #e6e8eb; --border: #dcdfe3; --border-hover: #b9bfc7;
+	|	--killed: #1a7f37; --survived: #c0392b; --partial: #b26a00; --link: #0b5cd5;
+	|	--bg-killed: #e7f5ea; --bg-survived: #fdeaea; --bg-nocover: #f1f2f4; --bg-error: #fdf3e3;
+	|	--btn-bg: #1c1e21; --btn-fg: #fff;
+	|	--code: var(--shiki-light);
+	|}
+	|@media (prefers-color-scheme: dark) {
+	|	:root:not(:has(#theme-light:checked)) {
+	|		--bg: #16181c; --fg: #e6e8eb; --muted: #9aa0a6; --faint: #6a707a;
+	|		--line: #2a2e35; --border: #343a42; --border-hover: #4a515b;
+	|		--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
+	|		--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
+	|		--btn-bg: #e6e8eb; --btn-fg: #16181c;
+	|		--code: var(--shiki-dark);
+	|	}
+	|}
+	|:root:has(#theme-dark:checked) {
+	|	--bg: #16181c; --fg: #e6e8eb; --muted: #9aa0a6; --faint: #6a707a;
+	|	--line: #2a2e35; --border: #343a42; --border-hover: #4a515b;
+	|	--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
+	|	--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
+	|	--btn-bg: #e6e8eb; --btn-fg: #16181c;
+	|	--code: var(--shiki-dark);
+	|}
 	|body { font-family: system-ui, -apple-system, ""Segoe UI"", sans-serif; margin: 0 auto; padding: 24px;
-	|	max-width: 1100px; color: #1c1e21; background: #fff; }
+	|	max-width: 1100px; color: var(--fg); background: var(--bg); }
 	|h1 { font-size: 22px; margin: 0 0 20px; }
 	|h2.package { font-size: 13px; margin: 34px 0 10px; text-transform: uppercase; letter-spacing: 0.08em;
-	|	color: #6a707a; border-bottom: 1px solid #e6e8eb; padding-bottom: 6px; word-break: break-all; }
+	|	color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 6px;
+	|	word-break: break-all; }
 	|h3 { font-size: 15px; margin: 24px 0 8px; font-family: ui-monospace, ""Cascadia Code"", Consolas, monospace;
 	|	font-weight: 600; word-break: break-all; }
 	|.switch { position: absolute; opacity: 0; pointer-events: none; }
 	|.tabs { display: flex; gap: 4px; margin: 24px 0 12px; }
-	|.tabs label { font-size: 13px; padding: 5px 12px; border: 1px solid #dcdfe3; border-radius: 999px;
-	|	cursor: pointer; color: #6a707a; user-select: none; }
-	|.tabs label:hover { border-color: #b9bfc7; }
-	|#вид-пакеты:checked ~ .tabs label[for=""вид-пакеты""],
-	|#вид-файлы:checked ~ .tabs label[for=""вид-файлы""] { background: #1c1e21; border-color: #1c1e21; color: #fff; }
-	|#вид-пакеты:checked ~ table.files { display: none; }
-	|#вид-файлы:checked ~ table.packages { display: none; }
-	|#вид-файлы:checked ~ .sections h2.package { display: none; }
+	|.tabs label.theme { margin-left: auto; }
+	|.tabs label.theme ~ label.theme { margin-left: 0; }
+	|.tabs label { font-size: 13px; padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
+	|	cursor: pointer; color: var(--muted); user-select: none; }
+	|.tabs label:hover { border-color: var(--border-hover); }
+	|#view-packages:checked ~ .tabs label[for=""view-packages""],
+	|#view-files:checked ~ .tabs label[for=""view-files""],
+	|#theme-light:checked ~ .tabs label[for=""theme-light""],
+	|#theme-dark:checked ~ .tabs label[for=""theme-dark""] { background: var(--btn-bg);
+	|	border-color: var(--btn-bg); color: var(--btn-fg); }
+	|#view-packages:checked ~ table.files { display: none; }
+	|#view-files:checked ~ table.packages { display: none; }
+	|#view-files:checked ~ .sections h2.package { display: none; }
 	|table.packages { border-collapse: collapse; width: 100%; font-size: 14px; }
-	|table.packages th, table.packages td { border-bottom: 1px solid #e6e8eb; padding: 6px 10px; text-align: right; }
+	|table.packages th, table.packages td { border-bottom: 1px solid var(--line); padding: 6px 10px;
+	|	text-align: right; }
 	|table.packages th:first-child, table.packages td:first-child { text-align: left; word-break: break-all; }
-	|table.packages th { font-size: 12px; color: #6a707a; font-weight: 600; }
-	|table.packages td.killed { color: #1a7f37; }
-	|table.packages td.survived { color: #c0392b; }
-	|table.packages td.partial { color: #b26a00; }
-	|table.packages td.nocover, table.files td.nocover { color: #9aa0a6; }
+	|table.packages th { font-size: 12px; color: var(--muted); font-weight: 600; }
+	|table.packages td.killed { color: var(--killed); }
+	|table.packages td.survived { color: var(--survived); }
+	|table.packages td.partial { color: var(--partial); }
+	|table.packages td.nocover, table.files td.nocover { color: var(--faint); }
 	|.summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
-	|.metric { border: 1px solid #dcdfe3; border-radius: 8px; padding: 10px 16px; min-width: 96px; }
+	|.metric { border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; min-width: 96px; }
 	|.metric .value { font-size: 22px; font-weight: 600; }
-	|.metric .caption { font-size: 12px; color: #6a707a; margin-top: 2px; }
-	|.metric.killed .value { color: #1a7f37; }
-	|.metric.survived .value { color: #c0392b; }
-	|.metric.partial .value { color: #b26a00; }
-	|.metric.nocover .value { color: #6a707a; }
-	|.metric.error .value { color: #b26a00; }
+	|.metric .caption { font-size: 12px; color: var(--muted); margin-top: 2px; }
+	|.metric.killed .value { color: var(--killed); }
+	|.metric.survived .value { color: var(--survived); }
+	|.metric.partial .value { color: var(--partial); }
+	|.metric.nocover .value { color: var(--muted); }
+	|.metric.error .value { color: var(--partial); }
 	|table.files { border-collapse: collapse; width: 100%; font-size: 14px; }
-	|table.files th, table.files td { border-bottom: 1px solid #e6e8eb; padding: 6px 10px; text-align: right; }
+	|table.files th, table.files td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: right; }
 	|table.files th:first-child, table.files td:first-child { text-align: left; word-break: break-all; }
-	|table.files th { font-size: 12px; color: #6a707a; font-weight: 600; }
-	|table.files td.killed { color: #1a7f37; }
-	|table.files td.survived { color: #c0392b; }
-	|table.files td.partial { color: #b26a00; }
+	|table.files th { font-size: 12px; color: var(--muted); font-weight: 600; }
+	|table.files td.killed { color: var(--killed); }
+	|table.files td.survived { color: var(--survived); }
+	|table.files td.partial { color: var(--partial); }
 	|table.source { border-collapse: collapse; width: 100%; font-size: 13px;
 	|	font-family: ui-monospace, ""Cascadia Code"", Consolas, monospace; }
 	|table.source td { padding: 1px 8px; vertical-align: top; }
-	|table.source td.num { text-align: right; color: #9aa0a6; width: 1%; white-space: nowrap;
-	|	user-select: none; border-right: 1px solid #e6e8eb; }
+	|table.source td.num { text-align: right; color: var(--faint); width: 1%; white-space: nowrap;
+	|	user-select: none; border-right: 1px solid var(--line); }
 	|table.source td.code { white-space: pre-wrap; }
-	|table.source tr.killed { background: #e7f5ea; }
-	|table.source tr.survived { background: #fdeaea; }
-	|table.source tr.nocover { background: #f1f2f4; }
-	|table.source tr.error { background: #fdf3e3; }
+	|/* Shiki кладёт в каждый токен обе темы переменными, а какую взять - решает тут */
+	|table.source td.code span { color: var(--code); }
+	|table.source tr.killed { background: var(--bg-killed); }
+	|table.source tr.survived { background: var(--bg-survived); }
+	|table.source tr.nocover { background: var(--bg-nocover); }
+	|table.source tr.error { background: var(--bg-error); }
 	|table.source tr.mutation td { font-size: 12px; padding-bottom: 3px; }
 	|.badge { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 600;
 	|	color: #fff; }
-	|.badge.killed { background: #1a7f37; }
-	|.badge.survived { background: #c0392b; }
-	|.badge.nocover { background: #6a707a; }
-	|.badge.error { background: #b26a00; }
-	|.mutator { color: #6a707a; }
-	|.method { color: #6a707a; }
-	|.missing { color: #6a707a; font-size: 14px; }
-	|.footer { color: #9aa0a6; font-size: 12px; margin-top: 32px; }
-	|a { color: #0b5cd5; text-decoration: none; }
+	|.badge.killed { background: var(--killed); }
+	|.badge.survived { background: var(--survived); }
+	|.badge.nocover { background: var(--muted); }
+	|.badge.error { background: var(--partial); }
+	|.mutator { color: var(--muted); }
+	|.method { color: var(--muted); }
+	|.missing { color: var(--muted); font-size: 14px; }
+	|.footer { color: var(--faint); font-size: 12px; margin-top: 32px; }
+	|a { color: var(--link); text-decoration: none; }
 	|a:hover { text-decoration: underline; }
 	|</style>";
 
