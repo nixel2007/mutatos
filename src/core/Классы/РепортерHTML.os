@@ -677,7 +677,10 @@
 	|	--line: #e6e8eb; --border: #dcdfe3; --border-hover: #b9bfc7;
 	|	--killed: #1a7f37; --survived: #c0392b; --partial: #b26a00; --link: #0b5cd5;
 	|	--bg-killed: #e7f5ea; --bg-survived: #fdeaea; --bg-nocover: #f1f2f4; --bg-error: #fdf3e3;
-	|	--btn-bg: #1c1e21; --btn-fg: #fff; --badge-fg: #fff;
+	|	--btn-bg: #1c1e21; --btn-fg: #fff;
+	|	/* У бейджей свои фоны: цвета текста для них слишком светлые */
+	|	--badge-fg: #fff; --badge-killed: #1a7f37; --badge-survived: #c0392b;
+	|	--badge-nocover: #6a707a; --badge-partial: #b26a00;
 	|}
 	|@media (prefers-color-scheme: dark) {
 	|	:root:not(:has(#theme-light:checked)) {
@@ -700,8 +703,10 @@
 	|	--killed: #4ac26b; --survived: #f27a72; --partial: #e0a44a; --link: #6cb0ff;
 	|	--bg-killed: #14301c; --bg-survived: #3a1a1a; --bg-nocover: #21242a; --bg-error: #35291a;
 	|	--btn-bg: #e6e8eb; --btn-fg: #16181c;
-	|	/* фоны бейджей в тёмной теме светлые, поэтому текст на них тёмный */
-	|	--badge-fg: #16181c;
+	|	/* В тёмной теме бейджи не светлеют вслед за текстом, а темнеют:
+	|	   чёрным по зелёному и красному читается плохо */
+	|	--badge-fg: #f0f2f4; --badge-killed: #24603a; --badge-survived: #8c3b34;
+	|	--badge-nocover: #3a4048; --badge-partial: #7a5518;
 	|}
 	|:root:has(#theme-dark:checked) table.source td.code span { color: var(--shiki-dark); }
 	|body { font-family: system-ui, -apple-system, ""Segoe UI"", sans-serif; margin: 0 auto; padding: 24px;
@@ -752,7 +757,7 @@
 	|table.files td.killed { color: var(--killed); }
 	|table.files td.survived { color: var(--survived); }
 	|table.files td.partial { color: var(--partial); }
-	|table.source { border-collapse: collapse; width: 100%; font-size: 13px;
+	|table.source { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.5;
 	|	font-family: ui-monospace, ""Cascadia Code"", Consolas, monospace; }
 	|table.source td { padding: 1px 8px; vertical-align: top; }
 	|table.source td.num { text-align: right; color: var(--faint); width: 1%; white-space: nowrap;
@@ -765,13 +770,13 @@
 	|table.source tr.survived { background: var(--bg-survived); }
 	|table.source tr.nocover { background: var(--bg-nocover); }
 	|table.source tr.error { background: var(--bg-error); }
-	|table.source tr.mutation td { font-size: 12px; padding-bottom: 3px; }
-	|.badge { display: inline-block; border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 600;
+	|table.source tr.mutation td { font-size: 13px; padding-bottom: 4px; }
+	|.badge { display: inline-block; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 600;
 	|	color: var(--badge-fg); }
-	|.badge.killed { background: var(--killed); }
-	|.badge.survived { background: var(--survived); }
-	|.badge.nocover { background: var(--muted); }
-	|.badge.error { background: var(--partial); }
+	|.badge.killed { background: var(--badge-killed); }
+	|.badge.survived { background: var(--badge-survived); }
+	|.badge.nocover { background: var(--badge-nocover); }
+	|.badge.error { background: var(--badge-partial); }
 	|.mutator { color: var(--muted); }
 	|.method { color: var(--muted); }
 	|.missing { color: var(--muted); font-size: 14px; }
