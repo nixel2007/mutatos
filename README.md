@@ -1,5 +1,10 @@
 # mutatos
 
+[![Тестирование](https://github.com/nixel2007/mutatos/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/nixel2007/mutatos/actions/workflows/test.yml)
+[![Покрытие](https://sonar.openbsl.ru/api/project_badges/measure?project=mutatos&metric=coverage)](https://sonar.openbsl.ru/dashboard?id=mutatos)
+[![Релиз](https://img.shields.io/github/v/release/nixel2007/mutatos?label=релиз)](https://github.com/nixel2007/mutatos/releases/latest)
+[![Telegram](https://img.shields.io/badge/Telegram-чат-blue?logo=telegram)](https://t.me/autumn_winow)
+
 Мутационное тестирование для OneScript.
 
 Покрытие показывает, какие строки выполнялись во время тестов. Заметят ли тесты, что эти строки начали работать неправильно, оно не говорит. Мутационное тестирование это и проверяет: вносит в исходники небольшие изменения и смотрит, упадут ли тесты.
