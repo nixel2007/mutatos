@@ -1,0 +1,17 @@
+name: Контроль качества
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  qa:
+    uses: autumn-library/workflows/.github/workflows/sonar.yml@v1
+    with:
+      github_repository: nixel2007/mutatos
+      test_engine: oneunit
+      test_dir_paths: tests
+      coveralls: true
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
